@@ -1,254 +1,6 @@
+const API_KEY = "YOUR_GROQ_API_KEY";
 
-<!DOCTYPE html>
-<html lang="hi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI School Assistant</title>
-
-<style>
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #eef2ff;
-}
-
-header {
-    background: linear-gradient(135deg,#4338ca,#6366f1);
-    color: white;
-    text-align: center;
-    padding: 22px;
-}
-
-header h1 {
-    margin: 0;
-}
-
-.container {
-    max-width: 800px;
-    margin: 25px auto;
-    background: white;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 4px 15px #0002;
-}
-
-.topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-#chatbox {
-    height: 430px;
-    overflow-y: auto;
-    padding: 12px;
-    background: #f8fafc;
-    border-radius: 10px;
-    border: 1px solid #e2e8f0;
-}
-
-.message {
-    padding: 12px;
-    margin: 10px 0;
-    border-radius: 10px;
-    max-width: 85%;
-    line-height: 1.6;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-}
-
-.user {
-    background: #dbeafe;
-    margin-left: auto;
-    text-align: right;
-}
-
-.bot {
-    background: #dcfce7;
-    margin-right: auto;
-}
-
-.input-area {
-    display: flex;
-    gap: 8px;
-    margin-top: 15px;
-}
-
-input {
-    flex: 1;
-    min-width: 0;
-    padding: 14px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 16px;
-}
-
-button {
-    padding: 12px 18px;
-    background: #4338ca;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 15px;
-}
-
-button:hover {
-    background: #312e81;
-}
-
-button:disabled {
-    opacity: .5;
-    cursor: not-allowed;
-}
-
-.clear {
-    background: #ef4444;
-}
-
-.typing {
-    color: #64748b;
-    padding: 10px;
-    font-style: italic;
-}
-
-.suggestions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-.suggestions button {
-    background: #e0e7ff;
-    color: #3730a3;
-    font-size: 13px;
-}
-
-@media(max-width:500px) {
-    .container {
-        margin: 10px;
-        padding: 12px;
-    }
-
-    #chatbox {
-        height: 55vh;
-    }
-
-    .message {
-        max-width: 95%;
-    }
-}
-</style>
-</head>
-
-<body>
-
-<header>
-    <h1>🎓 AI School Assistant</h1>
-    <p>Your Smart Learning Partner</p>
-</header>
-
-<div class="container">
-
-    <div class="topbar">
-        <h2>नमस्ते विद्यार्थी! 👋</h2>
-        <button class="clear" onclick="clearChat()">Clear Chat 🗑️</button>
-    </div>
-
-    <p>मुझसे पढ़ाई से जुड़े सवाल पूछिए।</p>
-
-    <div id="chatbox" aria-live="polite">
-        <div class="message bot">
-            नमस्ते! 😊 मैं आपका AI School Assistant हूँ।
-
-            आप मुझसे गणित, विज्ञान, हिंदी, अंग्रेजी,
-            कंप्यूटर और सामान्य ज्ञान के सवाल पूछ सकते हैं।
-        </div>
-    </div>
-
-    <div class="suggestions">
-        <button onclick="ask('2 + 2 कितना होता है?')">➕ Maths</button>
-        <button onclick="ask('प्रकाश संश्लेषण क्या है?')">🔬 Science</button>
-        <button onclick="ask('संज्ञा किसे कहते हैं?')">📖 Hindi</button>
-        <button onclick="ask('What is a computer?')">💻 Computer</button>
-    </div>
-
-    <div class="input-area">
-        <input
-            type="text"
-            id="userInput"
-            placeholder="अपना सवाल लिखें..."
-            maxlength="4000"
-        >
-
-        <button id="sendBtn" onclick="sendMessage()">Send ➤</button>
-    </div>
-
-    <p style="text-align:center;color:#64748b;font-size:12px;">
-        Powered by Groq AI ❤️
-    </p>
-
-</div>
-
-<script>
-
-// =================================
-// GROQ API CONFIGURATION
-// =================================
-
-// अपनी Groq API Key यहाँ डालें
-const GROQ_API_KEY = "YOUR_GROQ_API_KEY";
-
-// Model
-const MODEL = "llama-3.3-70b-versatile";
-
-// Chat History
-let conversation = [];
-
-// =================================
-// SEND MESSAGE
-// =================================
-
-async function sendMessage() {
-
-    const input = document.getElementById("userInput");
-    const button = document.getElementById("sendBtn");
-
-    const question = input.value.trim();
-
-    if (!question || button.disabled) return;
-
-    if (GROQ_API_KEY === "YOUR_GROQ_API_KEY") {
-        alert("कृपया अपनी Groq API Key डालें!");
-        return;
-    }
-
-    addMessage(question, "user");
-
-    input.value = "";
-
-    conversation.push({
-        role: "user",
-        content: question
-    });
-
-    button.disabled = true;
-    button.innerText = "Thinking...";
-
-    const typing = document.createElement("div");
-    typing.className = "typing";
-    typing.innerText = "🤖 AI सोच रहा है...";
-    document.getElementById("chatbox").appendChild(typing);
-
-    scrollChat();
+async function askAI(question) {
 
     try {
 
@@ -259,48 +11,25 @@ async function sendMessage() {
 
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": "Bearer " + GROQ_API_KEY
+                    "Authorization": `Bearer ${API_KEY}`
                 },
 
                 body: JSON.stringify({
-
-                    model: MODEL,
+                    model: "llama-3.3-70b-versatile",
 
                     messages: [
                         {
                             role: "system",
-                            content: `
-You are an intelligent AI School Assistant.
-
-Help school students with:
-1. Mathematics
-2. Science
-3. Hindi
-4. English
-5. Social Science
-6. Computer
-7. General Knowledge
-
-Instructions:
-- Reply in the language used by the student.
-- Support Hindi and English.
-- Explain everything in simple language.
-- Explain maths step by step.
-- Give examples.
-- Be friendly and polite.
-- Encourage students to learn.
-- Never invent facts.
-- Keep answers suitable for school students.
-                            `
+                            content: "You are a helpful AI School Assistant. Answer students in simple Hindi or English."
                         },
-
-                        ...conversation.slice(-12)
-
+                        {
+                            role: "user",
+                            content: question
+                        }
                     ],
 
-                    temperature: 0.6,
-                    max_tokens: 1500
-
+                    temperature: 0.7,
+                    max_tokens: 1000
                 })
             }
         );
@@ -308,123 +37,14 @@ Instructions:
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(
-                data.error?.message || "Groq API Error"
-            );
+            throw new Error(data.error?.message || "API Error");
         }
 
-        const answer = data.choices?.[0]?.message?.content;
-
-        if (!answer) {
-            throw new Error("AI response is empty.");
-        }
-
-        conversation.push({
-            role: "assistant",
-            content: answer
-        });
-
-        addMessage(answer, "bot");
+        return data.choices[0].message.content;
 
     } catch (error) {
 
-        conversation.pop();
-
-        addMessage(
-            "❌ Error: " + error.message,
-            "bot"
-        );
-
-    } finally {
-
-        typing.remove();
-
-        button.disabled = false;
-        button.innerText = "Send ➤";
-
-        input.focus();
+        return "Error: " + error.message;
 
     }
 }
-
-// =================================
-// ADD MESSAGE
-// =================================
-
-function addMessage(text, type) {
-
-    const chatbox = document.getElementById("chatbox");
-
-    const message = document.createElement("div");
-
-    message.className = "message " + type;
-
-    message.textContent = text;
-
-    chatbox.appendChild(message);
-
-    scrollChat();
-}
-
-// =================================
-// SCROLL CHAT
-// =================================
-
-function scrollChat() {
-
-    const chatbox = document.getElementById("chatbox");
-
-    chatbox.scrollTop = chatbox.scrollHeight;
-
-}
-
-// =================================
-// SUGGESTED QUESTIONS
-// =================================
-
-function ask(question) {
-
-    document.getElementById("userInput").value = question;
-
-    sendMessage();
-
-}
-
-// =================================
-// ENTER KEY
-// =================================
-
-document.getElementById("userInput")
-.addEventListener("keydown", function(event) {
-
-    if (event.key === "Enter") {
-        sendMessage();
-    }
-
-});
-
-// =================================
-// CLEAR CHAT
-// =================================
-
-function clearChat() {
-
-    if (!confirm("क्या आप Chat History हटाना चाहते हैं?")) {
-        return;
-    }
-
-    conversation = [];
-
-    document.getElementById("chatbox").innerHTML = "";
-
-    addMessage(
-        "नमस्ते! 😊 मैं आपका AI School Assistant हूँ। आज क्या सीखना चाहते हैं?",
-        "bot"
-    );
-
-}
-
-</script>
-
-</body>
-</html>
